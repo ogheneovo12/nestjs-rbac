@@ -13,7 +13,8 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand --config ./test/jest.json",
     "test:e2e": "jest  --verbose  --config ./test/e2e/jest-e2e.json",
     "test:int": "jest  --verbose --config ./test/int/jest-int.json",
-    "test": "jest --verbose --config ./test/jest.json"
+    "test": "jest --verbose --config ./test/jest.json",
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
