@@ -64,7 +64,6 @@ export class RBAcModule {
     }
 
     commonProviders.push(
-      ...[
         ...(providers || []),
         rbac,
         {
@@ -82,7 +81,7 @@ export class RBAcModule {
           },
           inject,
         },
-      ],
+      
     );
 
     return {
