@@ -62,27 +62,21 @@ export class RBAcModule {
       });
       inject.push(RBAcModule.cache);
     }
-
-    commonProviders.push(
-        ...(providers || []),
-        rbac,
-        {
-          provide: StorageRbacService,
-          useFactory: async (
-            moduleRef: ModuleRef,
-            rbacService: IDynamicStorageRbac,
-            cache?: ICacheRBAC,
-          ) => {
-            return new StorageRbacService(
-              moduleRef,
-              rbacService,
-              RBAcModule.setCacheOptions(cache),
-            );
-          },
-          inject,
-        },
-      
-    );
+    commonProviders.push(...(providers || []), rbac, {
+      provide: StorageRbacService,
+      useFactory: async (
+        moduleRef: ModuleRef,
+        rbacService: IDynamicStorageRbac,
+        cache?: ICacheRBAC,
+      ) => {
+        return new StorageRbacService(
+          moduleRef,
+          rbacService,
+          RBAcModule.setCacheOptions(cache),
+        );
+      },
+      inject,
+    });
 
     return {
       module: RBAcModule,
