@@ -1,10 +1,16 @@
-import { DynamicModule, Global, Module } from '@nestjs/common';
-import { RbacService } from './services/rbac.service';
+import {
+  DynamicModule,
+  Global,
+  Module,
+  OnApplicationBootstrap,
+} from '@nestjs/common';
 import { ModuleRef, Reflector } from '@nestjs/core';
-import { StorageRbacService } from './services/storage.rbac.service';
-import { IStorageRbac } from './interfaces/storage.rbac.interface';
-import { IDynamicStorageRbac } from './interfaces/dynamic.storage.rbac.interface';
+import { Ctr } from './ctr/ctr';
 import { ICacheRBAC } from './interfaces/cache.rbac.interface';
+import { IDynamicStorageRbac } from './interfaces/dynamic.storage.rbac.interface';
+import { IStorageRbac } from './interfaces/storage.rbac.interface';
+import { RbacService } from './services/rbac.service';
+import { StorageRbacService } from './services/storage.rbac.service';
 
 @Global()
 @Module({
@@ -12,9 +18,11 @@ import { ICacheRBAC } from './interfaces/cache.rbac.interface';
   imports: [],
   exports: [RbacService],
 })
-export class RBAcModule {
+export class RBAcModule implements OnApplicationBootstrap {
   private static cache?: any | ICacheRBAC;
   private static cacheOptions?: { KEY?: string; TTL?: number };
+
+  constructor(private readonly moduleRef: ModuleRef) {}
 
   static useCache(
     cache: any | ICacheRBAC,
@@ -50,7 +58,7 @@ export class RBAcModule {
     providers?: any[],
     imports?: any[],
   ): DynamicModule {
-    const inject = [ModuleRef, rbac];
+    const inject = [rbac];
     const commonProviders = [];
     if (RBAcModule.cache) {
       commonProviders.push(RBAcModule.cache, {
@@ -62,21 +70,26 @@ export class RBAcModule {
       });
       inject.push(RBAcModule.cache);
     }
-    commonProviders.push(...(providers || []), rbac, {
-      provide: StorageRbacService,
-      useFactory: async (
-        moduleRef: ModuleRef,
-        rbacService: IDynamicStorageRbac,
-        cache?: ICacheRBAC,
-      ) => {
-        return new StorageRbacService(
-          moduleRef,
-          rbacService,
-          RBAcModule.setCacheOptions(cache),
-        );
-      },
-      inject,
-    });
+
+    commonProviders.push(
+      ...[
+        ...(providers || []),
+        rbac,
+        {
+          provide: StorageRbacService,
+          useFactory: async (
+            rbacService: IDynamicStorageRbac,
+            cache?: ICacheRBAC,
+          ) => {
+            return new StorageRbacService(
+              rbacService,
+              RBAcModule.setCacheOptions(cache),
+            );
+          },
+          inject,
+        },
+      ],
+    );
 
     return {
       module: RBAcModule,
@@ -101,5 +114,9 @@ export class RBAcModule {
     }
 
     return cache;
+  }
+
+  onApplicationBootstrap(): any {
+    Ctr.ctr = this.moduleRef;
   }
 }
